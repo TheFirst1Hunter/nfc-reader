@@ -1,32 +1,305 @@
 <!-- index.html -->
 <!DOCTYPE html>
-<html>
+<html dir="rtl">
   <head>
     <title>NFC Card Reader</title>
-  </head>
-  <body>
-    <h1>NFC Card Reader</h1>
-    <div id="cardData"></div>
-    <select id="cardType" onchange="typeChanged()">
-      <option value="new">new</option>
-      <option value="old">old</option>
-    </select>
-    <div id="root"></div>
-
-    <script>
-      const { ipcRenderer } = require("electron");
-      console.log("init");
-      ipcRenderer.on("cardData", (event, card) => {
-        const cardDataElement = document.getElementById("cardData");
-        cardDataElement.innerHTML = JSON.stringify(card, null, 2);
-        console.log("Da");
-      });
-
-      function typeChanged() {
-        let selectElement = document.querySelector("#cardType");
-        let output = selectElement.value;
-        ipcRenderer.send("cardTypeChanged", output);
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css?family=Cairo"
+    />
+    <style>
+      body {
+        font-family: "Cairo", sans-serif;
       }
-    </script>
+    </style>
+  </head>
+  <body class="bg-gray-100">
+   
+      <form
+        id="myForm"
+        class="max-w-md mx-auto bg-white p-8 shadow-md rounded-lg"
+      >
+       <div class="container mx-auto p-8">
+      <div class="w-full flex">
+        <div class="w-full justify-center flex flex-col text-xl font-semibold mb-2">
+حالة قارئ الNFC:
+      
+<div class="w-full  p-3 border border-gray-300 rounded-lg">
+          <span
+          id="NFCstatus"
+          class="bg-red-200 text-red-600 px-4 py-2 rounded-3xl text-center text-sm"
+          >غير متصل</span>
+        </div>
+        </div>
+      </div>
+        <div class="mb-4">
+          <label for="cardNumber" class="block text-xl font-semibold mb-2"
+            >رقم البطاقة</label
+          >
+          <input
+            type="text"
+            id="cardNumber"
+            placeholder="رقم البطاقة"
+            class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-green-500"
+          />
+        </div>
+        <div class="mb-4">
+          <label for="fullName" class="block text-xl font-semibold mb-2"
+            >الاسم الثلاثي</label
+          >
+          <input
+            type="text"
+            id="fullName"
+            placeholder="الاسم الثلاثي"
+            class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-green-500"
+          />
+        </div>
+        <div class="mb-4">
+          <label for="motherName" class="block text-xl font-semibold mb-2"
+            >اسم الام</label
+          >
+          <input
+            type="text"
+            id="motherName"
+            placeholder="اسم الام"
+            class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-green-500"
+          />
+        </div>
+        <div class="mb-4">
+          <label for="gender" class="block text-xl font-semibold mb-2"
+            >الجنس</label
+          >
+          <select
+            id="gender"
+            class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-green-500"
+          >
+            <option value="male">ذكر</option>
+            <option value="female">أنثى</option>
+          </select>
+        </div>
+        <div class="mb-4">
+          <label for="birthdate" class="block text-xl font-semibold mb-2"
+            >المواليد</label
+          >
+          <input
+            type="date"
+            id="birthdate"
+            class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-green-500"
+          />
+        </div>
+        <div class="mb-4">
+          <label for="nationalID" class="block text-xl font-semibold mb-2"
+            >رقم الهوية الشخصية</label
+          >
+          <input
+            type="text"
+            id="nationalID"
+            placeholder="رقم الهوية الشخصية"
+            class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-green-500"
+          />
+        </div>
+        <div class="mb-4">
+          <label for="issueDate" class="block text-xl font-semibold mb-2"
+            >تاريخ الإصدار</label
+          >
+          <input
+            type="date"
+            id="issueDate"
+            placeholder="تاريخ الإصدار"
+            class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-green-500"
+          />
+        </div>
+        <div class="mb-4">
+          <label for="expireDate" class="block text-xl font-semibold mb-2"
+            >تاريخ الانتهاء</label
+          >
+          <input
+            type="date"
+            id="expireDate"
+            placeholder="تاريخ الانتهاء"
+            class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-green-500"
+          />
+        </div>
+        <div class="mb-4">
+          <label for="companyName" class="block text-xl font-semibold mb-2"
+            >اسم الشركة وعنوانها</label
+          >
+          <input
+            type="text"
+            id="companyName"
+            placeholder="اسم الشركة وعنوانها"
+            class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-green-500"
+          />
+        </div>
+        <button
+        id="submitButton"
+          type="submit"
+          class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg focus:outline-none"
+        >
+          كتابة
+        </button>
+      </form>
+    </div>
   </body>
+  <script>
+    const { ipcRenderer } = require("electron");
+    function removeQuotesAndBackslashes(inputString) {
+      try{
+// Replace double quotes and backslashes with empty strings
+      const cleanString = inputString.replace(/["\\]/g, "");
+
+      return cleanString;
+      }
+      catch(e){
+errorButton()
+      }
+    }
+
+    function setFormData(data) {
+      // const formData = JSON.parse(data);
+      document.getElementById("cardNumber").value = removeQuotesAndBackslashes(
+        data[0]
+      );
+      document.getElementById("fullName").value = removeQuotesAndBackslashes(
+        data[1]
+      );
+      document.getElementById("motherName").value = removeQuotesAndBackslashes(
+        data[2]
+      );
+      document.getElementById("gender").value = removeQuotesAndBackslashes(
+        data[3]
+      );
+      document.getElementById("birthdate").value = removeQuotesAndBackslashes(
+        data[4]
+      );
+      document.getElementById("nationalID").value = removeQuotesAndBackslashes(
+        data[5]
+      );
+      document.getElementById("issueDate").value = removeQuotesAndBackslashes(
+        data[6]
+      );
+      document.getElementById("expireDate").value = removeQuotesAndBackslashes(
+        data[7]
+      );
+      document.getElementById("companyName").value = removeQuotesAndBackslashes(
+        data[8]
+      );
+    }
+
+    function getFormData() {
+      // const formData = {
+      //   cardNumber: document.getElementById("cardNumber").value,
+      //   fullName: document.getElementById("fullName").value,
+      //   motherName: document.getElementById("motherName").value,
+      //   gender: document.getElementById("gender").value,
+      //   birthdate: document.getElementById("birthdate").value,
+      //   nationalID: document.getElementById("nationalID").value,
+      //   issueDate: document.getElementById("issueDate").value,
+      //   expireDate: document.getElementById("expireDate").value,
+      //   companyName: document.getElementById("companyName").value,
+      // };
+
+      const formDataArray = [
+        document.getElementById("cardNumber").value,
+        document.getElementById("fullName").value,
+        document.getElementById("motherName").value,
+        document.getElementById("gender").value,
+        document.getElementById("birthdate").value,
+        document.getElementById("nationalID").value,
+        document.getElementById("issueDate").value,
+        document.getElementById("expireDate").value,
+        document.getElementById("companyName").value,
+      ];
+
+      console.log("date:", document.getElementById("birthdate").value);
+      console.log(formDataArray);
+
+      return formDataArray;
+    }
+
+    document
+      .getElementById("myForm")
+      .addEventListener("submit", function (event) {
+
+
+        event.preventDefault(); // Prevent form submission
+        const data = getFormData();
+        console.log(data);
+
+        const submitButton = document.getElementById("submitButton")
+  submitButton.disabled = true
+        submitButton.innerHTML = "قم بتمرير البطاقة"
+        submitButton.className = "bg-gray-500 text-white font-bold py-3 px-6 rounded-lg focus:outline-none"
+     
+        ipcRenderer.send("writeCard", data);
+      });
+function errorButton(){
+     const submitButton = document.getElementById("submitButton")
+
+        submitButton.disabled = true
+        submitButton.innerHTML = "حدث خطأ"
+        submitButton.className = "bg-red-200 text-red-600 font-bold py-3 px-6 rounded-lg "
+
+        const tineout = setTimeout(()=>{
+ submitButton.disabled = false
+        submitButton.innerHTML = "كتابة"
+        submitButton.className = "bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg focus:outline-none"
+     clearTimeout(tineout)
+        },3000)
+   
+}
+    ipcRenderer.on("cardData", (event, data) => {
+      console.log(data);
+      // document.getElementById("cardNumber").value = data;
+      setFormData(data);
+    });
+
+    ipcRenderer.on('readerConnected',(event)=>{
+      const NFCstatusElement = document.getElementById('NFCstatus');
+      NFCstatusElement.className = "bg-green-200 text-green-600 px-4 py-2 rounded-3xl text-center text-sm"
+      NFCstatusElement.innerHTML = "متصل"
+    })
+
+    ipcRenderer.on("readerDisconnected",(event)=>{
+       const NFCstatusElement = document.getElementById('NFCstatus');
+      NFCstatusElement.className = "bg-red-200 text-red-600 px-4 py-2 rounded-3xl text-center text-sm"
+      NFCstatusElement.innerHTML = "غير متصل"
+    })
+
+    ipcRenderer.on('readOrWrite',(event,_data)=>{
+      const submitButton = document.getElementById("submitButton")
+      if(_data == "write"){
+        submitButton.disabled = true
+        submitButton.innerHTML = "قم بتمرير البطاقة"
+        submitButton.className = "bg-gray-500 text-white font-bold py-3 px-6 rounded-lg focus:outline-none"
+      }
+      if(_data == "read"){
+        submitButton.disabled = false
+        submitButton.innerHTML = "كتابة"
+        submitButton.className = "bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg focus:outline-none"
+      }
+    })
+
+    ipcRenderer.on('busyStatus',(event,_data)=>{
+      const submitButton = document.getElementById("submitButton")
+      if(_data){
+  submitButton.disabled = true
+        submitButton.innerHTML = "الرجاء الانتظار"
+        submitButton.className = "bg-gray-500 text-white font-bold py-3 px-6 rounded-lg focus:outline-none"
+      }
+      if(!_data){
+          submitButton.disabled = false
+        submitButton.innerHTML = "كتابة"
+        submitButton.className = "bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg focus:outline-none"
+      }
+    })
+
+    ipcRenderer.on('error',()=>{
+      errorButton()
+          })
+  </script>
 </html>
