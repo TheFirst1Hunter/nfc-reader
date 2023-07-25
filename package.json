@@ -9,7 +9,6 @@
     "@testing-library/user-event": "^13.5.0",
     "electron-rebuild": "^3.2.9",
     "electron-squirrel-startup": "^1.0.0",
-    "nfc-pcsc": "^0.8.1",
     "path-browserify": "^1.0.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -26,7 +25,9 @@
     "electron": "electron .",
     "rebuild": "electron-rebuild",
     "package": "electron-forge package",
-    "make": "electron-forge make"
+    "make": "electron-forge make",
+    "package-win-all": "electron-packager . MyElectronApp --platform=all --out=dist ",
+    "electron-v": "electron -v"
   },
   "eslintConfig": {
     "extends": [
